@@ -8,6 +8,8 @@ paginate: true
 
 ![inline, center](ewg-logo-blue-white-on-transparent-256x256.png)
 
+Goal: everyone grabs a blue pill and creates at least one low level driver.
+
 *mail@uwe-arzt.de*
 *https://uwe-arzt.de*
 
@@ -31,6 +33,9 @@ Often the need to operate without (power interruption sensitive) filesystem and 
 * A JTAG/SWD adapter. More expensive boards have it build in. I use a Segger j-link, other options are OpenOCD, BlackMagic, ST-Link.
 * A cable to connect (There are **standard** connectors, but always check).
 
+Many onboard ST-Link programmers can be reprogrammed to be JLinks.
+
+Most common architectures are supported, but not the cheap ESPs with WLAN connection.
 
 ---
 
@@ -97,6 +102,18 @@ can also be set in gdb startup file.
 
 ---
 
+## Other target upload methods
+
+### Serial connection
+
+Some microcontrollers have a internal monitor, which allows to upload the binary file over a serial connection. This allows for a fast upload, but debugging is hard (print over serial).
+
+### Mount Flash as disk
+
+There are microcontroller (i.e. some mbed devices), which show up as Thumbdrive. You can copy the binary to the driver and after a reset the new uploaded binary will get started. Debugging is even harder.
+
+---
+
 ## embedded-hal
 
 <https://crates.io/crates/embedded-hal>
@@ -118,6 +135,8 @@ let i2c = I2cdev::new("/dev/i2c-1").unwrap();
 // system neutral
 let mut grideye = GridEye::new(i2c, Delay, Address::Standard);
 ```
+
+![w:200px](rpi_qwiic.jpg)
 
 Very helpful (if interface is available) to develop on a Linux machine, debugging is much easier.
 
@@ -177,6 +196,28 @@ linux-embedded-hal: ❌
 
 ---
 
+### create your own low level driver
+
+Check on [Awesome embedded Rust](https://github.com/rust-embedded/awesome-embedded-rust) if already available.
+
+* Nowadays many ICs use I2C or SPI for Interfacing to the microcontroler. Both interfaces are available on the RPi, it is easy to start there first.
+* The serial buses on ICs are sensitive to timing issues, so setting a breakpoint is often not an option.
+* Get a evaluation board for the sensor and interface it to your board (there are a lot of different plugs for i.e. I2C, see Sparkfun QWIIC, Seedstudio Grove)
+* Some ICs (i.e. AS5048) are avaiulable for different bus systems
+* There are Protoboards, which can contain both bus systems (i.e. MikroE click)
+* Get the datasheet for your IC
+
+---
+
+## Driver Overview
+
+[AS5048](https://github.com/uwearzt/as5048a.git) -> SPI
+[GridEYE](https://github.com/uwearzt/grideye.git) -> I2C
+
+Helpful stuff: Most logic analysers can decode serial bus signals.
+
+---
+
 ## Embedded OS
 
 ### There are at least some RTOS written in Rust:
@@ -191,13 +232,25 @@ Apache  Mynewt - <https://medium.com/@ly.lee/hosting-embedded-rust-apps-on-apach
 
 ---
 
-
 ## Links
 
 [Rust embedded Book](https://rust-embedded.github.io/book/)
 [Rust embedded WG github](https://github.com/rust-embedded)
 [Awesome embedded Rust](https://github.com/rust-embedded/awesome-embedded-rust)
+[@rustembedded](https://twitter.com/rustembedded)
 
 ---
 
-## Questions
+## State (my humble opinion)
+
+* Perfect for "all new projects"
+* If you have to use existing stuff, evaluate a RTOS with Rust bindings for your logic
+* Fast development, many old stuff in searches
+* Many Libs and drivers are still missing, or are not longer maintained
+* Lots of libs should be splitted into nostd + std parts
+
+---
+
+## Questions / Remarks
+
+Be aware: many bluepills have the wrong pullup resistor on USB. See <http://amitesh-singh.github.io/stm32/2017/10/09/correcting-usbpullup-resistor.html>.
